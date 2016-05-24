@@ -1,0 +1,22 @@
+#!/bin/sh
+
+TARGET=$(ls target/*.jar 2>/dev/null)
+if [ -z "$TARGET" ]; then
+    echo "No jar file in target/, try 'mvn package'".
+    exit 1
+fi
+
+# In the pom.xml, we've already explained what other libraries we
+# depend on. Maven downloaded them, and put them "somewhere" (our
+# repository). Now we ask maven to build up the CLASSPATH that lets us
+# run against those libraries.
+
+# We store the CLASSPATH in .mvn-classpath if the pom.xml is newer
+# than our existing .mvn-classpath file. (We avoid this command if
+# .mvn-classpath is fresh, since it's rather slow.)
+if [ ! .mvn-classpath -nt pom.xml ]; then
+  mvn dependency:build-classpath -Dmdep.outputFile=.mvn-classpath -q
+fi
+
+CP=$(cat .mvn-classpath)
+java -ea -cp $TARGET:$CP com.hhalvers.microorm.Main "$@"
