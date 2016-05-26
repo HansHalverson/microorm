@@ -4,6 +4,7 @@ import org.junit.AfterClass;
 import static org.junit.Assert.assertEquals;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.omg.CORBA.INVALID_ACTIVITY;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -14,7 +15,7 @@ public class DatabaseTest {
   private static Database db;
 
   @BeforeClass
-  public static void setupClass() throws ClassNotFoundException, SQLException {
+  public static void setupClass() throws ClassNotFoundException, SQLException, DatabaseMapException {
     Class.forName("org.sqlite.JDBC");
     Connection conn = DriverManager.getConnection("jdbc:sqlite:data/smallTestDb.sqlite3");
     db = new Database(conn);
@@ -26,6 +27,25 @@ public class DatabaseTest {
     db.close();
   }
 
+  @Test(expected = DatabaseMapException.class)
+  public void registerNoEntityAnnotation() throws DatabaseMapException {
+    db.registerEntity(InvalidEntities.NoEntityAnnotation.class);
+  }
+
+  @Test(expected = DatabaseMapException.class)
+  public void registerNoTableAnnotation() throws DatabaseMapException {
+    db.registerEntity(InvalidEntities.NoTableAnnotation.class);
+  }
+
+  @Test(expected = DatabaseMapException.class)
+  public void registerNoIdAnnotation() throws DatabaseMapException {
+    db.registerEntity(InvalidEntities.NoIdAnnotation.class);
+  }
+
+  @Test(expected = DatabaseMapException.class)
+  public void registerMultipleIdAnnotations() throws DatabaseMapException {
+    db.registerEntity(InvalidEntities.MultipleIdAnnotations.class);
+  }
 
   @Test
   public void addTest() throws Exception {
