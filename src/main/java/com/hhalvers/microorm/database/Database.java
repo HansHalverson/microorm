@@ -1,6 +1,6 @@
 package com.hhalvers.microorm.database;
 
-import com.hhalvers.microorm.annotation.Table;
+import com.hhalvers.microorm.annotation.Entity;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 
@@ -23,8 +23,8 @@ public class Database implements AutoCloseable {
   }
 
   public void registerEntity(Class entityClass) {
-    if (entityClass.getAnnotation(Table.class) != null && !registeredClasses.contains(entityClass)) {
-      MethodInterceptor invokeHandler = new EntityMethodInterceptor(entityClass);
+    if (entityClass.getAnnotation(Entity.class) != null && !registeredClasses.contains(entityClass)) {
+      MethodInterceptor invokeHandler = new EntityMethodInterceptor(entityClass, conn);
       methodInterceptors.put(entityClass, invokeHandler);
       registeredClasses.add(entityClass);
     }
@@ -39,7 +39,7 @@ public class Database implements AutoCloseable {
 
   public Object add(Object entity) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException, InstantiationException {
     Class entityClass = entity.getClass();
-    if (entityClass.getAnnotation(Table.class) != null && registeredClasses.contains(entityClass)) {
+    if (entityClass.getAnnotation(Entity.class) != null && registeredClasses.contains(entityClass)) {
       MethodInterceptor interceptor = methodInterceptors.get(entityClass);
 
       Enhancer enhancer = new Enhancer();

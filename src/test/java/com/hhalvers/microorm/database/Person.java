@@ -1,10 +1,8 @@
 package com.hhalvers.microorm.database;
 
-import com.hhalvers.microorm.annotation.Column;
-import com.hhalvers.microorm.annotation.ColumnType;
-import com.hhalvers.microorm.annotation.Id;
-import com.hhalvers.microorm.annotation.Table;
+import com.hhalvers.microorm.annotation.*;
 
+@Entity
 @Table(table = "person")
 public class Person {
 

@@ -1,6 +1,7 @@
 package com.hhalvers.microorm.database;
 
 import org.junit.AfterClass;
+import static org.junit.Assert.assertEquals;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -30,9 +31,12 @@ public class DatabaseTest {
   public void addTest() throws Exception {
     Person p = new Person(1, "one");
     p = (Person) db.add(p);
+
+    assertEquals(1, p.getId());
+    assertEquals("one", p.getName());
+
+    p.setId(2);
     p.setName("two");
-    p.setName("three");
-    p.getId();
   }
 
 }
