@@ -1,6 +1,7 @@
 package com.hhalvers.microorm.database;
 
 import com.hhalvers.microorm.annotation.Column;
+import com.hhalvers.microorm.annotation.Id;
 import com.hhalvers.microorm.annotation.Table;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
@@ -18,9 +19,12 @@ public class EntityMethodInterceptor implements MethodInterceptor {
   private Connection conn;
 
   private String tableName;
+  private String idColumnName;
+  private Field idField;
   private SortedMap<String, Field> columnFields = new TreeMap<>();
 
   private String insertStatement;
+  private String updateStatement;
 
   EntityMethodInterceptor(Class entityClass, Connection conn) {
     this.entityClass = entityClass;
@@ -34,40 +38,19 @@ public class EntityMethodInterceptor implements MethodInterceptor {
     this.tableName = tableAnnotation.table();
 
     for (Field field : entityClass.getDeclaredFields()) {
-      Column columnAnnotation = field.getDeclaredAnnotation(Column.class);
+      Column columnAnnotation = field.getAnnotation(Column.class);
       if (columnAnnotation != null) {
         columnFields.put(columnAnnotation.column(), field);
+
+        if (field.getAnnotation(Id.class) != null) {
+          idColumnName = columnAnnotation.column();
+          idField = field;
+        }
       }
     }
 
-    this.insertStatement = createInsertStatement(columnFields.size());
-  }
-
-  private String createInsertStatement(int numColumns) {
-    StringBuilder insertBuilder = new StringBuilder("INSERT INTO ");
-    insertBuilder.append(tableName);
-    insertBuilder.append(" (");
-    int i = 0;
-    for (String column : columnFields.keySet()) {
-      if (i > 0) {
-        insertBuilder.append(",");
-      }
-      insertBuilder.append(column);
-      i++;
-    }
-
-    insertBuilder.append(") VALUES (");
-
-    for (i = 0; i < numColumns; i++) {
-      if (i > 0) {
-        insertBuilder.append(",");
-      }
-      insertBuilder.append("?");
-    }
-
-    insertBuilder.append(");");
-
-    return insertBuilder.toString();
+    this.insertStatement = QueryTemplateCreator.createInsertStatement(columnFields.keySet(), tableName);
+    this.updateStatement = QueryTemplateCreator.createUpdateStatement(columnFields.keySet(), idColumnName, tableName);
   }
 
   @Override
@@ -105,8 +88,7 @@ public class EntityMethodInterceptor implements MethodInterceptor {
   }
 
   private void saveStateToDb(Object obj) throws SQLException, IllegalAccessException {
-    try (PreparedStatement prep = conn.prepareStatement(insertStatement)) {
-      prep.setString(1, tableName);
+    try (PreparedStatement prep = conn.prepareStatement(updateStatement)) {
 
       int i = 1;
       for (String column : columnFields.keySet()) {
@@ -116,6 +98,8 @@ public class EntityMethodInterceptor implements MethodInterceptor {
         prep.setObject(i, field.get(obj));
         i++;
       }
+
+      prep.setObject(i, idField.get(obj));
 
       prep.execute();
     }

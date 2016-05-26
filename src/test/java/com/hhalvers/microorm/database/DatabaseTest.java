@@ -4,7 +4,6 @@ import org.junit.AfterClass;
 import static org.junit.Assert.assertEquals;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.omg.CORBA.INVALID_ACTIVITY;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
